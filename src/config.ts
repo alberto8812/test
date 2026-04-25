@@ -24,6 +24,14 @@ export function validateEnv() {
     }
 }
 
+export const DB_CONFIG = {
+  host: process.env.MYSQL_DB_HOST ?? 'localhost',
+  user: process.env.MYSQL_DB_USER ?? '',
+  database: process.env.MYSQL_DB_NAME ?? '',
+  password: process.env.MYSQL_DB_PASSWORD ?? '',
+  port: Number(process.env.MYSQL_DB_PORT ?? 3306),
+}
+
 export function validateEmailEnv() {
     if (!EMAIL_CONFIG.user || !EMAIL_CONFIG.pass || !EMAIL_CONFIG.to) {
         throw new Error('❌ Faltan variables de entorno para email en .env')

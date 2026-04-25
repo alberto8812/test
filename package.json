@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/app.ts",
   "scripts": {
-    "dev": "ts-node ./base-ts-meta-memory/src/app.ts",
+    "dev": "ts-node ./src/app.ts",
     "start": "node dist/app.js",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -14,13 +14,18 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@builderbot/bot": "^1.4.1",
+    "@builderbot/database-mysql": "^1.4.1",
+    "@builderbot/provider-meta": "^1.4.1",
     "@types/node": "^24.0.13",
+    "dotenv": "^16.4.7",
     "nodemailer": "^6.9.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "tsx": "^4.19.2",
     "ts-node-dev": "^2.0.0",
     "@types/nodemailer": "^6.4.0",
     "vitest": "^1.0.0",

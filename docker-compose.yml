@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: novadesk_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: novadesk_db
+      MYSQL_USER: novadesk
+      MYSQL_PASSWORD: novadesk_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - novadesk_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "novadesk", "-pnovadesk_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  novadesk_mysql_data:

@@ -1,2 +1,4 @@
-import { MemoryDB as Database } from '@builderbot/bot'
-export const adapterDB = new Database()
+import { MysqlAdapter } from '@builderbot/database-mysql'
+import { DB_CONFIG } from './config'
+
+export const adapterDB = new MysqlAdapter(DB_CONFIG)

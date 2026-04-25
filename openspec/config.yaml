@@ -1,0 +1,52 @@
+schema: spec-driven
+
+context: |
+  Stack: TypeScript 5.8 + Node.js v22 + @builderbot/bot + @builderbot/provider-meta (WhatsApp)
+  Architecture: WhatsApp help desk bot para SAFI y NOVAHOLD (incidentes, requerimientos, asesoría)
+  Email: nodemailer + Office365 SMTP con reintentos exponenciales
+  Database: MySQL (@builderbot/database-mysql — reemplaza MemoryDB)
+  Test runner: vitest 1.x
+  Style: TypeScript strict mode, sin linter/formatter configurado
+
+strict_tdd: true
+
+testing:
+  strict_tdd: true
+  detected: "2026-04-25"
+  test_runner:
+    command: "npm test"
+    framework: vitest
+  layers:
+    unit: { available: true, tool: vitest }
+    integration: { available: false }
+    e2e: { available: false }
+  coverage:
+    available: true
+    command: "npm run test:coverage"
+  quality:
+    linter: { available: false }
+    type_checker: { available: true, command: "npx tsc --noEmit" }
+    formatter: { available: false }
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Never use type = any; use real types from @builderbot/bot
+  verify:
+    - Run tests if test infrastructure exists
+    - Compare implementation against every spec scenario
+  archive:
+    - Warn before merging destructive deltas (large removals)
