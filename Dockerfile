@@ -1,40 +1,58 @@
-# Image size ~ 400MB
-FROM node:21-alpine3.18 as builder
+# ─────────────────────────────────────────────────────────
+# Stage 1: deps
+# Instala solo las dependencias de producción.
+# python3/make/g++ son necesarios para compilar módulos
+# nativos de npm (ej: drivers de MySQL). Se descartan al
+# terminar — nunca llegan a la imagen final.
+# ─────────────────────────────────────────────────────────
+FROM node:22-slim AS deps
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
-ENV PNPM_HOME=/usr/local/bin
+COPY package*.json ./
+
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends python3 make g++ \
+    && npm ci --omit=dev \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# ─────────────────────────────────────────────────────────
+# Stage 2: builder
+# Instala todas las deps (incluyendo typescript) y compila
+# el código fuente TypeScript a JavaScript en dist/.
+# ─────────────────────────────────────────────────────────
+FROM node:22-slim AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
 
 COPY . .
+RUN npm run build
 
-COPY package*.json *-lock.yaml ./
 
-RUN apk add --no-cache --virtual .gyp \
-        python3 \
-        make \
-        g++ \
-    && apk add --no-cache git \
-    && pnpm install && pnpm run build \
-    && apk del .gyp
-
-FROM node:21-alpine3.18 as deploy
+# ─────────────────────────────────────────────────────────
+# Stage 3: deploy — distroless
+# Sin shell, sin package manager, sin usuario root.
+# Solo Node.js + el código compilado + node_modules de prod.
+# Superficie de ataque mínima.
+# ─────────────────────────────────────────────────────────
+FROM gcr.io/distroless/nodejs22-debian12 AS deploy
 
 WORKDIR /app
 
-ARG PORT
-ENV PORT $PORT
-EXPOSE $PORT
+# nonroot (uid 65532) viene incluido en la imagen distroless
+USER nonroot
 
-COPY --from=builder /app/assets ./assets
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/*.json /app/*-lock.yaml ./
+COPY --from=deps    --chown=nonroot:nonroot /app/node_modules ./node_modules
+COPY --from=builder --chown=nonroot:nonroot /app/dist         ./dist
+COPY --from=builder --chown=nonroot:nonroot /app/assets       ./assets
 
-RUN corepack enable && corepack prepare pnpm@latest --activate 
-ENV PNPM_HOME=/usr/local/bin
+ENV PORT=3008
+EXPOSE 3008
 
-RUN npm cache clean --force && pnpm install --production --ignore-scripts \
-    && addgroup -g 1001 -S nodejs && adduser -S -u 1001 nodejs \
-    && rm -rf $PNPM_HOME/.npm $PNPM_HOME/.node-gyp
-
-CMD ["npm", "start"]
+# distroless/nodejs22 tiene ENTRYPOINT ["node"] built-in
+# así que CMD recibe directamente el archivo a ejecutar
+CMD ["dist/app.js"]
